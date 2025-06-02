@@ -3,10 +3,10 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 import os
 from flask import Flask, request, jsonify, url_for
-from flask_cors import CORS # type: ignore
+from flask_cors import CORS  # type: ignore
 from utils import APIException, generate_sitemap
 from datastructures import FamilyStructure
-#from models import Person
+# from models import Person
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -23,35 +23,37 @@ initial_members = [
 
 print("Añadiendo miembros iniciales...")
 for member in initial_members:
-    jackson_family.add_member(member)  
+    jackson_family.add_member(member)
     print(f"Miembro añadido: {member['first_name']}")
+
 
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
+
+
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
+
 @app.route('/members', methods=['GET'])
 def handle_hello():
-
-    # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
     response_body = {
         "hello": "world",
         "family": members
     }
 
-
     return jsonify(response_body), 200
+
 
 @app.route('/members/<int:member_id>', methods=['GET'])
 def get_one_member(member_id):
     member = jackson_family.get_member(member_id)
-    
+
     if member:
         response = {
             "id": member["id"],
@@ -63,18 +65,18 @@ def get_one_member(member_id):
     else:
         return jsonify({"error": "Miembro no encontrado"}), 404
 
+
 @app.route('/members', methods=['POST'])
 def add_family_member():
     data = request.get_json()
-    
+
     if not data:
         return jsonify({"error": "No se enviaron datos"}), 400
-    
+
     required_fields = ["first_name", "age", "lucky_numbers"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Falta el campo: {field}"}), 400
-        
 
     new_member = {
         "first_name": data["first_name"],
@@ -85,6 +87,7 @@ def add_family_member():
         new_member["id"] = data["id"]
     jackson_family.add_member(new_member)
     return jsonify(), 200
+
 
 @app.route('/members/<int:member_id>', methods=['DELETE'])
 def delete_family_member(member_id):
